@@ -1,11 +1,13 @@
 <?php
 include_once(PS_ADMIN_DIR.'/../classes/AdminTab.php');
-include(PS_ADMIN_DIR.'/tabs/AdminCMSContent.php');
+include_once(PS_ADMIN_DIR.'/tabs/AdminCMSContent.php');
+include_once('AdminLookbookProducts.php');
 
 class AdminLookbook extends AdminTab
 {
   private $_category;
   private $_id_category;
+  private $adminLookbookProducts;
 
   public function __construct()
 	{
@@ -16,6 +18,8 @@ class AdminLookbook extends AdminTab
 	 	$this->edit = true;
 	 	$this->view = true;
 	 	$this->delete = true;
+	 	
+	 	$this->adminLookbookProducts = new AdminLookbookProducts();
 	 	
 	 	$this->fieldsDisplay = array(
 		  'id_cms' => array('title' => $this->l('ID'), 'align' => 'center', 'width' => 25),
@@ -42,8 +46,10 @@ class AdminLookbook extends AdminTab
 		
 		if(isset($_GET['addcms']) OR isset($_GET['updatecms']))
 		{
-		  $this->displayForm();
+		  $this->displayForm($token);
 		}
+		elseif(isset($_GET['conf']) AND ((int)Tools::getValue('conf') == 4 OR (int)Tools::getValue('conf') == 3))
+		  $this->adminLookbookProducts->display($this->token, (int)Tools::getValue('id_cms'));
 		else
 		{
 		  if (($id_cms_category = (int)Tools::getValue('id_cms_category')))
@@ -76,7 +82,7 @@ class AdminLookbook extends AdminTab
 		$this->displayListFooter($token);
 	}
 
-  public function displayForm($isMainTab = true)
+  public function displayForm($token)
 	{
 		global $currentIndex, $cookie;
 		parent::displayForm();
@@ -141,7 +147,6 @@ class AdminLookbook extends AdminTab
 					<input type="radio" name="active" id="active_off" onclick="toggleDraftWarning(true);" value="0" '.(!$this->getFieldValue($obj, 'active') ? 'checked="checked" ' : '').'/>
 					<label class="t" for="active_off"> <img src="../img/admin/disabled.gif" alt="'.$this->l('Disabled').'" title="'.$this->l('Disabled').'" /></label>
 				</div>';
-		
 		// SUBMIT
 		echo '	<div class="margin-form space">
 					<input type="submit" value="'.$this->l('   Save   ').'" name="submitAdd'.$this->table.'" class="button" />
@@ -243,7 +248,7 @@ class AdminLookbook extends AdminTab
 						Tools::redirectAdmin($preview_url);
 					}
 					else
-						Tools::redirectAdmin($currentIndex.'&id_cms_category='.$cms->id_cms_category.'&conf=3&token='.Tools::getAdminTokenLite('AdminLookbook'));
+					 Tools::redirectAdmin($currentIndex.'&id_cms_category='.$cms->id_cms_category. '&id_cms='. $cms->id .'&conf=3&token='.Tools::getAdminTokenLite('AdminLookbook')); 
 				}
 				else
 				{
@@ -265,7 +270,7 @@ class AdminLookbook extends AdminTab
 						Tools::redirectAdmin($preview_url);
 					}
 					else
-						Tools::redirectAdmin($currentIndex.'&id_cms_category='.$cms->id_cms_category.'&conf=4&token='.Tools::getAdminTokenLite('AdminLookbook'));
+						Tools::redirectAdmin($currentIndex.'&id_cms_category='.$cms->id_cms_category. '&id_cms='. $cms->id .'&conf=4&token='.Tools::getAdminTokenLite('AdminLookbook'));
 				}
 			}
 		}
