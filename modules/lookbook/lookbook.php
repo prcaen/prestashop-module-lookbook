@@ -4,6 +4,7 @@ if(!defined('_PS_VERSION_'))
   exit;
 
 include_once(_PS_MODULE_DIR_.'lookbook/classes/Lookbook.php');
+include_once(_PS_MODULE_DIR_.'lookbook/classes/LookbookLooks.php');
 define('PS_LOOKBOOK_CATEGORY_ID', 'PS_LOOKBOOK_CMS_CATEGORY_ID');
 define('PS_LOOKBOOK_CMS_ID', 'PS_LOOKBOOK_CMS_ID');
 
@@ -35,7 +36,7 @@ class Lookbook extends Module
         4 => 'Lookbook',
         5 => 'Lookbook'
       ),
-      'idParent' => Tab::getIdFromClassName('AdminCatalog')
+      'idParent' => Tab::getIdFromClassName('AdminPreferences')
     );
 
     $this->_cmsCategory[] = array(
@@ -62,32 +63,32 @@ class Lookbook extends Module
       'id_cms_category' => 1, // temp
       'active'          => 1,
       'meta_title'      => array(
-        1 => 'Lookbook',
-        2 => 'Lookbook',
-        3 => 'Lookbook',
-        4 => 'Lookbook',
-        5 => 'Lookbook'
+        1 => 'Lookbooks',
+        2 => 'Lookbooks',
+        3 => 'Lookbooks',
+        4 => 'Lookbooks',
+        5 => 'Lookbooks'
       ),
       'link_rewrite'    => array(
-        1 => 'lookbook',
-        2 => 'lookbook',
-        3 => 'lookbook',
-        4 => 'lookbook',
-        5 => 'lookbook'
+        1 => 'lookbooks',
+        2 => 'lookbooks',
+        3 => 'lookbooks',
+        4 => 'lookbooks',
+        5 => 'lookbooks'
       ),
       'meta_description'      => array(
-        1 => 'Lookbook',
-        2 => 'Lookbook',
-        3 => 'Lookbook',
-        4 => 'Lookbook',
-        5 => 'Lookbook'
+        1 => 'Lookbooks',
+        2 => 'Lookbooks',
+        3 => 'Lookbooks',
+        4 => 'Lookbooks',
+        5 => 'Lookbooks'
       ),
       'meta_keywords'         => array(
-        1 => 'lookbook',
-        2 => 'lookbook',
-        3 => 'lookbook',
-        4 => 'lookbook',
-        5 => 'lookbook'
+        1 => 'lookbooks',
+        2 => 'lookbooks',
+        3 => 'lookbooks',
+        4 => 'lookbooks',
+        5 => 'lookbooks'
       )
     );
   }
@@ -103,9 +104,6 @@ class Lookbook extends Module
     
     // Add table lookbook
     if(!Db::getInstance()->Execute("CREATE TABLE `" . _DB_PREFIX_ . "lookbook` (`id_lookbook` INT NOT NULL AUTO_INCREMENT, `id_cms` INT NOT NULL, `id_cms_category` INT NOT NULL, PRIMARY KEY (`id_lookbook`))"))
-      return false;
-    // Add table lookbook_lang
-    if(!Db::getInstance()->Execute("CREATE TABLE `" . _DB_PREFIX_ . "lookbook_lang` (`id_lookbook_lang` INT NOT NULL AUTO_INCREMENT, `id_lookbook` INT NOT NULL, `content` LONGTEXT NOT NULL, PRIMARY KEY (`id_lookbook_lang`))"))
       return false;
     // Add table lookbook_looks
     if(!Db::getInstance()->Execute("CREATE TABLE `" . _DB_PREFIX_ . "lookbook_looks` (`id_look` INT NOT NULL AUTO_INCREMENT, `id_lookbook` INT NOT NULL, `id_cms` INT NOT NULL, PRIMARY KEY (`id_look`))"))
@@ -136,15 +134,6 @@ class Lookbook extends Module
       if(!self::addCMS($cms['id_cms_category'], $cms['meta_title'], $cms['link_rewrite'], $cms['active'], $cms['meta_description'], $cms['meta_keywords'], true))
         return false;
     }
-    
-    // Add lookbook root
-    $lookbook = new LookbookC();
-
-    $lookbook->id_cms          = Configuration::get(PS_LOOKBOOK_CMS_ID);
-    $lookbook->id_cms_category = Configuration::get(PS_LOOKBOOK_CATEGORY_ID);
-    
-    if(!$lookbook->save())
-      return false;
 
     return true;
   }
@@ -167,9 +156,6 @@ class Lookbook extends Module
     // Remove table lookbook_looks_products
     if(!DB::getInstance()->Execute("DROP TABLE `" . _DB_PREFIX_ . "lookbook_looks_products`"))
       return false;
-    // Remove table lookbook_lang
-    if(!DB::getInstance()->Execute("DROP TABLE `" . _DB_PREFIX_ . "lookbook_lang`"))
-      return false;
 
     // Delete hook
     if(!DB::getInstance()->Execute("DELETE FROM `" . _DB_PREFIX_ . "hook` WHERE `hook`.`name` = 'cmsLookbook'"))
@@ -189,14 +175,36 @@ class Lookbook extends Module
 
     // Add media to header
     Tools::addCSS(($this->_path) . 'lookbook.css', 'all');
-    Tools::addJS(($this->_path)  . 'lookbook.js');
+    Tools::addJS(($this->_path)  . '/js/lookbook.frontend.main.js');
   }
 
   public function hookCmsLookbook($params)
   {
-    global $smarty;
+    global $smarty, $cookie;
+
+    $levelCms = $this->getCategoryLvl(Tools::getValue('id_cms'));
     $smarty->assign('lookbook', true);
-    $smarty->assign('lookbook_page_type', $this->getCategoryLvl(Tools::getValue('id_cms')));
+    $smarty->assign('lookbook_page_type', $levelCms);
+
+    $cms = new CMS(Tools::getValue('id_cms'), $cookie->id_lang);
+    $smarty->assign('cms', $cms);
+
+    if($levelCms == 0)
+      $smarty->assign('lookbooks', LookbookC::getLookbooks());
+    elseif($levelCms == 1)
+      $smarty->assign('looks', LookbookLooks::getLooks(Tools::getValue('id_cms')));
+    else
+    {
+      $look = LookbookLooks::getObjectFromCmsId(Tools::getValue('id_cms'));
+      $datas = $look->getProducts($cookie->id_lang);
+      $smarty->assign('look', $look);
+      $smarty->assign('tax_enabled', Configuration::get('PS_TAX'));
+      if(!empty($datas['products']))
+      	$smarty->assign('lookProducts', $datas['products']);
+			if(!empty($datas['images']))
+      	$smarty->assign('cover', $datas['images']);
+    }
+
     return $this->display(__FILE__, 'lookbook.tpl');
   }
 
@@ -313,12 +321,12 @@ class Lookbook extends Module
     else
       return false;
   }
-  
+
   private function getCategoryLvl($id)
   {
     if($id == Configuration::get(PS_LOOKBOOK_CMS_ID))
       return 0;
-    elseif(Db::getInstance()->getValue("SELECT COUNT(`id_look`) FROM `lookbook_looks` WHERE  `" . _DB_PREFIX_ . "id_cms` = " . $id) != 0)
+    elseif(Db::getInstance()->getValue("SELECT COUNT(`id_lookbook`) FROM `" . _DB_PREFIX_ . "lookbook` WHERE  `id_cms` = " . $id) != 0)
       return 1;
     else
       return 2;

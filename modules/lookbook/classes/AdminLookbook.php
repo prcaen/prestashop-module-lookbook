@@ -27,11 +27,15 @@
 
 include_once(PS_ADMIN_DIR.'/../classes/AdminTab.php');
 include_once(PS_ADMIN_DIR.'/../modules/lookbook/AdminLookbookProducts.php');
+require_once(_PS_MODULE_DIR_ . 'lookbook/classes/phpthumb/ThumbLib.inc.php');
+require_once(_PS_MODULE_DIR_ . 'lookbook/classes/LookbookLooks.php');
 
 class AdminLookbook extends AdminTab
 {	
 	private $_category;
 	private $lookbook_root_id;
+	public  $lookbook_img_name = 'lookbook_img_';
+  private $_loobook_img_path;
 
 	public function __construct()
 	{
@@ -41,7 +45,9 @@ class AdminLookbook extends AdminTab
 	 	$this->edit = true;
 	 	$this->view = true;
 	 	$this->delete = true;
-		
+
+	 	$this->_localhost = false;
+
 		$this->fieldsDisplay = array(
 			'id_cms' => array('title' => $this->l('ID'), 'align' => 'center', 'width' => 25),
 			'link_rewrite' => array('title' => $this->l('URL'), 'width' => 200),
@@ -49,7 +55,12 @@ class AdminLookbook extends AdminTab
 			'position' => array('title' => $this->l('Position'), 'width' => 40,'filter_key' => 'position', 'align' => 'center', 'position' => 'position'),
 			'active' => array('title' => $this->l('Enabled'), 'width' => 25, 'align' => 'center', 'active' => 'status', 'type' => 'bool', 'orderby' => false)
 			);
-			
+
+		if($this->_localhost)
+      $this->_lookbook_img_path     = 'http://localhost/prestashop-lookbook/modules/lookbook/img/';
+    else
+      $this->_lookbook_img_path     = _PS_MODULE_DIR_ . '/lookbook/img/';
+
 		$this->_category = AdminLookbookContent::getCurrentLookbookCategory();
 		$this->_join = '
 		LEFT JOIN `'._DB_PREFIX_.'cms_category` c ON (c.`id_cms_category` = a.`id_cms_category`)';
@@ -58,6 +69,17 @@ class AdminLookbook extends AdminTab
 		
 		$this->lookbook_root_id = Configuration::get(PS_LOOKBOOK_CATEGORY_ID);
 		$this->adminLookbookProducts = new AdminLookbookProducts();
+		
+		// Level lookbook;
+		if($this->_category->id == $this->lookbook_root_id)
+		  $this->levelLookbook = 0;
+		elseif($this->_category->id_parent == $this->lookbook_root_id)
+		  $this->levelLookbook = 1;
+		elseif($this->_category->id != $this->lookbook_root_id && $this->_category->id_parent != $this->lookbook_root_id)
+		  $this->levelLookbook = 2;
+		else
+		  $this->levelLookbook = false;
+
 		parent::__construct();
 	}
 	
@@ -87,35 +109,37 @@ class AdminLookbook extends AdminTab
 		$divLangName = 'meta_title¤meta_description¤meta_keywords¤ccontent¤link_rewrite';
 
 		echo '
-		<form action="'.$currentIndex.'&submitAdd'.$this->table.'=1&token='.Tools::getAdminTokenLite('AdminLookbookContent').'" method="post" name="cms" id="cms">
+		<form action="'.$currentIndex.'&submitAdd'.$this->table.'=1&token='.Tools::getAdminTokenLite('AdminLookbookContent').'" method="post" name="cms" id="cms" enctype="multipart/form-data">
 			'.($obj->id ? '<input type="hidden" name="id_'.$this->table.'" value="'.$obj->id.'" />' : '').'
 			'.$this->_displayDraftWarning($obj->active);
 			
-			if($this->_category->id == $this->lookbook_root_id)
-			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$this->l('Lookbook').'</legend>';
-			elseif($this->_category->id_parent == $this->lookbook_root_id)
-			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$this->l('Looks').'</legend>';
-			else
+			if($this->levelLookbook == 0)
+			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$this->l('Lookbooks').'</legend>';
+			elseif($this->levelLookbook == 1)
+			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$obj->meta_title[$cookie->id_lang].'</legend>';
+			elseif($this->levelLookbook == 2)
 			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$this->l('Look page').'</legend>';
+			else
+			  echo '<fieldset><legend><img src="../img/t/AdminLogs.gif" />'.$this->l('CMS page').'</legend>';
 			
 		// META TITLE
-		echo '<label '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>'.$this->l('CMS Category:').' </label>
-				<div class="margin-form" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>
+		echo '<label '.($this->levelLookbook == 0 || $this->levelLookbook == 1 ? 'style="display:none"' : '') .'>'.$this->l('CMS Category:').' </label>
+				<div class="margin-form" '.($this->levelLookbook == 0 || $this->levelLookbook == 1 ? 'style="display:none"' : '') .'>
 					<select name="id_cms_category">';
 		$categories = CMSCategory::getCategories((int)($cookie->id_lang), false);
 		CMSCategory::recurseCMSCategory($categories, $this->_getLookbookCategory(), $this->lookbook_root_id, $this->getFieldValue($obj, 'id_cms_category'));
 		echo '
 					</select>
 				</div>';
-		echo '<label '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>'.$this->l('Meta title').' </label>
-				<div class="margin-form" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>';
+		echo '<label '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>'.$this->l('Meta title').' </label>
+				<div class="margin-form" '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>';
 		foreach ($this->_languages as $language)
 			echo '	<div id="meta_title_'.$language['id_lang'].'" style="display: '.($language['id_lang'] == $this->_defaultFormLanguage ? 'block' : 'none').'; float: left;">
 						<input size="40" type="text" onkeyup="copyMeta2friendlyURL();" id="name_'.$language['id_lang'].'" name="meta_title_'.$language['id_lang'].'" value="'.htmlentities($this->getFieldValue($obj, 'meta_title', (int)($language['id_lang'])), ENT_COMPAT, 'UTF-8').'" /><sup> *</sup>
 					</div>';
 		
 		$this->displayFlags($this->_languages, $this->_defaultFormLanguage, $divLangName, 'meta_title');
-		echo '	</div><div class="clear space" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>&nbsp;</div>';
+		echo '	</div><div class="clear space" '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>&nbsp;</div>';
 		
 		// META DESCRIPTION
 		echo '	<label>'.$this->l('Meta description').' </label>
@@ -138,38 +162,43 @@ class AdminLookbook extends AdminTab
 		echo '	</div><div class="clear space">&nbsp;</div>';
 		
 		// LINK REWRITE
-		echo '	<label '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>'.$this->l('Friendly URL').' </label>
-				<div class="margin-form" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>';
+		echo '	<label '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>'.$this->l('Friendly URL').' </label>
+				<div class="margin-form" '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>';
 		foreach ($this->_languages as $language)
 			echo '	<div id="link_rewrite_'.$language['id_lang'].'" style="display: '.($language['id_lang'] == $this->_defaultFormLanguage ? 'block' : 'none').'; float: left;">
 						<input size="30" type="text" id="input_link_rewrite_'.$language['id_lang'].'" name="link_rewrite_'.$language['id_lang'].'" onkeyup="this.value = str2url(this.value); updateFriendlyURL();" value="'.htmlentities($this->getFieldValue($obj, 'link_rewrite', (int)($language['id_lang'])), ENT_COMPAT, 'UTF-8').'" /><sup> *</sup>
 					</div>';
 		$this->displayFlags($this->_languages, $this->_defaultFormLanguage, $divLangName, 'link_rewrite');
-		echo '	</div><div class="clear space" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>&nbsp;</div>';
-		
+		echo '	</div><div class="clear space" '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>&nbsp;</div>';
+    if($this->levelLookbook == 1 || $this->levelLookbook == 2)
+    {
+      // IMAGE
+      echo '<label for="lookbook_img">' . $this->l('Image') .'</label>';
+      echo '<div class="margin-form"><input type="file" name="lookbook_img" id="lookbook_img" /></div>';
+    }
 		// CONTENT
-		if($this->_category->id != $this->lookbook_root_id && $this->_category->id_parent != $this->lookbook_root_id)
-		  $this->adminLookbookProducts->display($this->token, (int)Tools::getValue('id_cms'));
-		else
-		{
 		  echo '	<label>'.$this->l('Page content').' </label>
 				<div class="margin-form">';
 		  foreach ($this->_languages as $language)
 			  echo '	<div id="ccontent_'.$language['id_lang'].'" style="display: '.($language['id_lang'] == $this->_defaultFormLanguage ? 'block' : 'none').';float: left;">
 						<textarea class="rte" cols="80" rows="30" id="content_'.$language['id_lang'].'" name="content_'.$language['id_lang'].'">'.htmlentities(stripslashes($this->getFieldValue($obj, 'content', $language['id_lang'])), ENT_COMPAT, 'UTF-8').'</textarea>
 					</div>';
-		$this->displayFlags($this->_languages, $this->_defaultFormLanguage, $divLangName, 'ccontent');
+		$this->displayFlags($this->_languages, $this->_defaultFormLanguage, $divLangName, 'content');
 		echo '	</div><div class="clear space">&nbsp;</div>';
-	  }
+
 		echo'
-				<label '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>'.$this->l('Enable:').' </label>
-				<div class="margin-form" '.($this->_category->id == $this->lookbook_root_id || $this->_category->id_parent == $this->lookbook_root_id ? 'style="display:none"' : '') .'>
+				<label '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>'.$this->l('Enable:').' </label>
+				<div class="margin-form" '.($this->levelLookbook == 1 ? 'style="display:none"' : '') .'>
 					<input type="radio" name="active" id="active_on" onclick="toggleDraftWarning(false);" value="1" '.($this->getFieldValue($obj, 'active') ? 'checked="checked" ' : '').'/>
 					<label class="t" for="active_on"> <img src="../img/admin/enabled.gif" alt="'.$this->l('Enabled').'" title="'.$this->l('Enabled').'" /></label>
 					<input type="radio" name="active" id="active_off" onclick="toggleDraftWarning(true);" value="0" '.(!$this->getFieldValue($obj, 'active') ? 'checked="checked" ' : '').'/>
 					<label class="t" for="active_off"> <img src="../img/admin/disabled.gif" alt="'.$this->l('Disabled').'" title="'.$this->l('Disabled').'" /></label>
 				</div>';
-		
+		  if($this->levelLookbook == 2)
+		  {
+		    echo '<label>' . $this->l('Products:') .'</label>';
+		    $this->adminLookbookProducts->display($this->token, (int)Tools::getValue('id_cms'));
+		  } 
 		// SUBMIT
 		echo '	<div class="margin-form space">
 					<input type="submit" value="'.$this->l('   Save   ').'" name="submitAdd'.$this->table.'" class="button" />
@@ -253,6 +282,7 @@ class AdminLookbook extends AdminTab
 		}
 		elseif (Tools::isSubmit('deletecms'))
 		{
+		  // Delete
 			if (Tools::getValue('id_cms') == Configuration::get('PS_CONDITIONS_CMS_ID'))
 			{
 				Configuration::updateValue('PS_CONDITIONS', 0);
@@ -263,7 +293,16 @@ class AdminLookbook extends AdminTab
 			if (!$cms->delete())
 				$this->_errors[] = Tools::displayError('An error occurred while deleting object.').' <b>'.$this->table.' ('.mysql_error().')</b>';
 			else
+			{
+			  if($this->levelLookbook == 2)
+			  {
+			    $look = LookbookLooks::getObjectFromCmsId((int)(Tools::getValue('id_cms')));
+          LookbookLooksProducts::deleteLookProducts($look->id);
+			    if(!$look->delete())
+			      $this->_errors[] = Tools::displayError('An error occurred while deleting object.').' <b>'.$this->table.' ('.mysql_error().')</b>';
+			  }
 				Tools::redirectAdmin($currentIndex.'&id_cms_category='.$cms->id_cms_category.'&conf=1&token='.Tools::getAdminTokenLite('AdminLookbookContent'));
+			}
 		}/* Delete multiple objects */
 		elseif (Tools::getValue('submitDel'.$this->table))
 		{
@@ -277,6 +316,11 @@ class AdminLookbook extends AdminTab
 					if ($result)
 					{
 						$cms->cleanPositions((int)(Tools::getValue('id_cms_category')));
+						if($this->levelLookbook == 2)
+    			  {
+              LookbookLooks::deleteSelectionLook(Tools::getValue($this->table.'Box'));
+    			  }
+
 						Tools::redirectAdmin($currentIndex.'&conf=2&token='.Tools::getAdminTokenLite('AdminLookbookContent').'&id_category='.(int)(Tools::getValue('id_cms_category')));
 					}
 					$this->_errors[] = Tools::displayError('An error occurred while deleting selection.');
@@ -290,6 +334,7 @@ class AdminLookbook extends AdminTab
 		}
 		elseif (Tools::isSubmit('submitAddcms') OR Tools::isSubmit('submitAddcmsAndPreview'))
 		{
+		  // Add
 			parent::validateRules();
 
 			if (!sizeof($this->_errors))
@@ -300,16 +345,39 @@ class AdminLookbook extends AdminTab
 					$this->copyFromPost($cms, 'cms');
 					if (!$cms->add())
 						$this->_errors[] = Tools::displayError('An error occurred while creating object.').' <b>'.$this->table.' ('.mysql_error().')</b>';
-					elseif (Tools::isSubmit('submitAddcmsAndPreview'))
+					else
 					{
-					  $look = new LookbookLooks();
+					  if (isset($_FILES['lookbook_img']) AND isset($_FILES['lookbook_img']['tmp_name']) AND !empty($_FILES['lookbook_img']['tmp_name']) AND ($this->levelLookbook == 1 || $this->levelLookbook == 2))
+            {
+              // Image
+              $file   = $_FILES['lookbook_img']['tmp_name'];
+              $thumb  = PhpThumbFactory::create($file);
+              if($this->levelLookbook == 1)
+                $name = 'lookbook_' . $cms->id;
+              else
+                $name = 'look' . '_' . $cms->id;
 
-					  $look->id_lookbook = $this->_category->id;
-					  $look->id_cms      = $cms->id;
+              $fileName = $this->_lookbook_img_path . $name . '.png';
 
-					  if(!$look->save())
-              $this->_errors[] = Tools::displayError('An error occurred while saving the new look');
+              $thumb->save($fileName, 'png');
 
+            }
+
+            if($this->levelLookbook == 2)
+            {
+              // LookbookLooks
+              $look = new LookbookLooks();
+
+  					  $look->id_lookbook = LookbookC::getObjectFromCmsCategoryId($this->_category->id)->id;
+  					  $look->id_cms      = $cms->id;
+
+  					  if(!$look->save())
+                $this->_errors[] = Tools::displayError('An error occurred while saving the new look');
+            }
+            
+					}
+					if (Tools::isSubmit('submitAddcmsAndPreview'))
+					{
 						$preview_url = $link->getCMSLink($cms, $this->getFieldValue($object, 'link_rewrite', $this->_defaultFormLanguage), (int)($cookie->id_lang));
 						if (!$cms->active)
 						{
@@ -326,11 +394,29 @@ class AdminLookbook extends AdminTab
 				}
 				else
 				{
+				  // Edit
 					$cms = new CMS($id_cms);
 					$this->copyFromPost($cms, 'cms');
 					if (!$cms->update())
 						$this->_errors[] = Tools::displayError('An error occurred while updating object.').' <b>'.$this->table.' ('.mysql_error().')</b>';
-					elseif (Tools::isSubmit('submitAddcmsAndPreview'))
+					else
+					{
+					  if (isset($_FILES['lookbook_img']) AND isset($_FILES['lookbook_img']['tmp_name']) AND !empty($_FILES['lookbook_img']['tmp_name']) AND ($this->levelLookbook == 1 || $this->levelLookbook == 2))
+            {
+              // Image
+              $file   = $_FILES['lookbook_img']['tmp_name'];
+              $thumb  = PhpThumbFactory::create($file);
+              if($this->levelLookbook == 1)
+                $name = 'lookbook_' . $cms->id;
+              else
+                $name = 'look' . '_' . $cms->id;
+
+              $fileName = $this->_lookbook_img_path . $name . '.png';
+
+              $thumb->save($fileName, 'png');
+            }
+          }
+					if (Tools::isSubmit('submitAddcmsAndPreview'))
 					{
 						$preview_url = $link->getCMSLink($cms, $this->getFieldValue($object, 'link_rewrite', $this->_defaultFormLanguage), (int)($cookie->id_lang));
 						if (!$cms->active)
@@ -404,4 +490,9 @@ class AdminLookbook extends AdminTab
 			$categories[$row['id_parent']][$row['id_cms_category']]['infos'] = $row;
 		return $categories[1][$lookbook_category];
   }
+  
+  private function _getExtension($file)
+	{
+	  return strrchr($file['name'], '.');
+	}
 }

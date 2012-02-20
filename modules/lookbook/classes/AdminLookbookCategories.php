@@ -338,16 +338,18 @@ class AdminLookbookCategories extends AdminTab
 							$object->deleted = 1;
 							if ($object->update())
 							{
-							  $lookbook = new LookbookC($object->id);
+							  $lookbook = LookbookC::getObjectFromCmsCategoryId($object->id);
+							  LookbookLooks::deleteLooks($lookbook->id);
 							  $lookbook->delete();
 								Tools::redirectAdmin($currentIndex.'&conf=1&token='.Tools::getValue('token'));
 							}
 						}
 						elseif ($object->delete())
 						{
-						  $lookbook = new LookbookC($object->id);
+						  $lookbook = LookbookC::getObjectFromCmsCategoryId($object->id);
+						  
 						  $lookbook->delete();
-
+						  
 							Tools::redirectAdmin($currentIndex.'&conf=1&token='.Tools::getValue('token'));
 						}
 						$this->_errors[] = Tools::displayError('An error occurred during deletion.');
@@ -382,6 +384,7 @@ class AdminLookbookCategories extends AdminTab
 					$result = $cms_category->deleteSelection(Tools::getValue($this->table.'Box'));
 					if ($result)
 					{
+					  LookbookLooks::deleteLooks(Tools::getValue($this->table.'Box'));
 						$cms_category->cleanPositions((int)(Tools::getValue('id_cms_category')));
 						Tools::redirectAdmin($currentIndex.'&conf=2&token='.Tools::getAdminTokenLite('AdminLookbookContent').'&id_category='.(int)(Tools::getValue('id_cms_category')));
 					}

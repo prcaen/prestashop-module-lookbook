@@ -25,7 +25,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 include_once(PS_ADMIN_DIR.'/tabs/AdminProfiles.php');
-include_once(PS_ADMIN_DIR.'/../modules/lookbook/classes/Lookbook.php');
+include_once(PS_ADMIN_DIR.'/../modules/lookbook/classes/LookbookLooks.php');
 
 class AdminLookbookProducts extends AdminTab
 {
@@ -33,7 +33,7 @@ class AdminLookbookProducts extends AdminTab
 	protected $maxFileSize  = NULL;
 
 	private $_category;
-	private $_id_cms = 0;
+	private $_id_look = 0;
 
 	public function __construct()
 	{
@@ -62,16 +62,16 @@ class AdminLookbookProducts extends AdminTab
 
 		/* Join categories table */
 		if(isset($_GET['id_cms']))
-		  $this->_id_cms = Tools::getValue('id_cms');
+		  $this->_id_look = LookbookLooks::getObjectFromCmsId(Tools::getValue('id_cms'))->id;
 		else
-		  $this->_id_cms = LookbookC::getNextId();
+		  $this->_id_look = LookbookLooks::getNextId();
 
 		$this->_join = '
 		LEFT JOIN `'._DB_PREFIX_.'image` i ON (i.`id_product` = a.`id_product` AND i.`cover` = 1)
 		LEFT JOIN `'._DB_PREFIX_.'category_product` cp ON (cp.`id_product` = a.`id_product`)
 		LEFT JOIN `'._DB_PREFIX_.'tax_rule` tr ON (a.`id_tax_rules_group` = tr.`id_tax_rules_group` AND tr.`id_country` = '.(int)Country::getDefaultCountryId().' AND tr.`id_state` = 0)
 		LEFT JOIN `'._DB_PREFIX_.'tax` t ON (t.`id_tax` = tr.`id_tax`)
-		LEFT JOIN `'._DB_PREFIX_.'lookbook_looks_products` lp ON (lp.`id_product` = a.`id_product` AND lp.`id_look` = '. $this->_id_cms .')';
+		LEFT JOIN `'._DB_PREFIX_.'lookbook_looks_products` lp ON (lp.`id_product` = a.`id_product` AND lp.`id_look` = '. $this->_id_look .')';
 		$this->_filter  = 'GROUP BY cp.`id_product`';
 		$this->_select = 'cp.`position`, i.`id_image`, (a.`price` * ((100 + (t.`rate`))/100)) AS price_final, count(lp.`id_product`) AS `selected`';
 
@@ -1451,7 +1451,7 @@ class AdminLookbookProducts extends AdminTab
 		if (!sizeof($this->_list))
 			echo '<tr><td class="center" colspan="'.(sizeof($this->fieldsDisplay) + 2).'">'.$this->l('No items found').'</td></tr>';
 
-    echo '<input type="hidden" class="id_cms" value="'. $this->_id_cms .'" />';
+    echo '<input type="hidden" class="id_look" value="'. $this->_id_look .'" />';
 		/* Show the content of the table */
 		$this->displayListContent($token);
 

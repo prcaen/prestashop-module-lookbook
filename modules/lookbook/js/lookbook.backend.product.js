@@ -2,7 +2,7 @@ Prestashop.lookbook.Product = {};
 
 Prestashop.lookbook.Product.toggleProduct = function (element, type, callback) {
   var idProduct = Prestashop.lookbook.Product.getId(element);
-  var idCms     = Prestashop.lookbook.Product.getIdCMS();
+  var idLook     = Prestashop.lookbook.Product.getIdLook();
   console.log(type);
   if(type == 'add')
     type = 'insert_product';
@@ -11,7 +11,7 @@ Prestashop.lookbook.Product.toggleProduct = function (element, type, callback) {
     console.log(type)
   $.ajax({
     url: Prestashop.lookbook.ajaxUrl,
-    data: {type: type, id_product: idProduct, id_look: idCms},
+    data: {type: type, id_product: idProduct, id_look: idLook},
     success: function(data) {
       var result = {};
       if(data.hasError == false)
@@ -32,6 +32,6 @@ Prestashop.lookbook.Product.getId = function (element) {
   return element.parent().next().text();
 }
 
-Prestashop.lookbook.Product.getIdCMS = function () {
-  return $('.id_cms').val();
+Prestashop.lookbook.Product.getIdLook = function () {
+  return $('.id_look').val();
 }

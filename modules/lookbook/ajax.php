@@ -2,7 +2,7 @@
 include_once('../../config/config.inc.php');
 include_once('../../init.php');
 include_once('../../images.inc.php');
-
+include_once(_PS_MODULE_DIR_ . 'lookbook/classes/LookbookLooksProducts.php');
 
 if(isset($_GET['type'])) {
   if(Tools::getValue('type') == 'insert_product')
@@ -12,14 +12,24 @@ if(isset($_GET['type'])) {
       $id_product      = Tools::getValue('id_product');
       $id_look         = Tools::getValue('id_look');
 
-      $values    = "'" . $id_product . "', '" . $id_look . "'";
-
-      $sql = 'INSERT INTO `' . _DB_PREFIX_ . 'lookbook_looks_products` (`id_product`, `id_look`) VALUES (' . $values . ')';
-
-      if(Db::getInstance()->Execute($sql))
+      $product = new LookbookLooksProducts();
+      
+      $product->id_product = $id_product;
+      $product->id_look    = $id_look;
+      
+      if($product->add())
         die('{"hasError" : false, "errors" : ""}');
       else
         die('{"hasError" : true, "errors" : ["Insert offer : an error has occured"]}');
+      //$values    = "'" . $id_product . "', '" . $id_look . "'";
+
+      //$sql = 'INSERT INTO `' . _DB_PREFIX_ . 'lookbook_looks_products` (`id_product`, `id_look`) VALUES (' . $values . ')';
+
+      /*if(Db::getInstance()->Execute($sql))
+        die('{"hasError" : false, "errors" : ""}');
+      else
+        die('{"hasError" : true, "errors" : ["Insert offer : an error has occured"]}');
+      */
     }
     else
       die('{"hasError" : true, "errors" : ["Please provide all data"]} ');
