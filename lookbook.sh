@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-path_website='/Users/Nyx/Sites/bellam/'
+path_website='/Users/Nyx/Sites/bitbucket/local/Bellam/bellam-site'
 theme='bellam'
 
 ## Delete old
