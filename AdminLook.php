@@ -246,7 +246,7 @@ class AdminLook extends AdminTab
 					var nbFieldset = $("#fieldset_image fieldset").length + 1;
 					newImage.removeClass("fieldset_image");
 					newImage.children(".image_ctn").remove();
-					console.log(newImage.children("p").children(".cover"));
+					//console.log(newImage.children("p").children(".cover"));
 					newImage.children("p").children(".cover").attr("value", nbFieldset - 1);
 					newImage.children("legend").children("span").html(nbFieldset);
 					$("#fieldset_image").append(newImage);
