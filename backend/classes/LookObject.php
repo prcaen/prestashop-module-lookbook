@@ -71,6 +71,8 @@ class LookObject extends ObjectModel
 		{
 			$this->images = $this->getImages();
 			$this->cover = $this->getCover();
+			$this->nextLook = self::getNextLook($id_look, $id_lang);
+			$this->prevLook = self::getPrevLook($id_look, $id_lang);
 		}
 	}
 
@@ -298,6 +300,30 @@ class LookObject extends ObjectModel
     $thumb->save($fileName);
 
     return $ext;
+	}
+
+	public static function getNextLook($id_current, $id_lang)
+	{
+		$sql = 'SELECT l.`id_look`, ll.`link_rewrite`
+						FROM `'._DB_PREFIX_.'look` l
+						LEFT JOIN `'._DB_PREFIX_.'look_lang` ll ON (l.`id_look` = ll.`id_look`)
+						WHERE l.`id_look` > '. (int)$id_current . '
+						ORDER BY l.`id_look` ASC
+						LIMIT 1';
+
+		return Db::getInstance()->ExecuteS($sql);
+	}
+
+	public static function getPrevLook($id_current, $id_lang)
+	{
+		$sql = 'SELECT l.`id_look`, ll.`link_rewrite`
+						FROM `'._DB_PREFIX_.'look` l
+						LEFT JOIN `'._DB_PREFIX_.'look_lang` ll ON (l.`id_look` = ll.`id_look`)
+						WHERE l.`id_look` < '. (int)$id_current . '
+						ORDER BY l.`id_look` ASC
+						LIMIT 1';
+
+		return Db::getInstance()->ExecuteS($sql);
 	}
 
 	private function _deleteOldImage($fileName)
