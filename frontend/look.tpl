@@ -2,7 +2,7 @@
 {capture name=path}<a href="{$link->getPageLink('home.php', true)}">{l s='Accueil'}</a><span class="navigation-pipe">{$navigationPipe}</span>{l s='Look'}{/capture}
 	{include file="$tpl_dir./breadcrumb.tpl"}
 	<div id="back-to-list">
-		<i class="sprite-product"></i><a href="">{l s='Retour aux looks'}</a>
+		<i class="sprite-product"></i><a href="{$base_dir}/lookbook.php">{l s='Retour aux looks'}</a>
 	</div>
 <div class="focus_look clearfix">
 <img class="look_big_one" src="{$base_dir}modules/lookbook/img/slides/{$look->images[0]['image']}" />
