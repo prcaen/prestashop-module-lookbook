@@ -38,15 +38,19 @@
 		<!-- usefull links-->
 		<li><a href="https://www.facebook.com/pages/Bellam-Mode/265280330176743"><i class="sprite-product fb"></i></a></li>
 		<li><a href="https://twitter.com/#!/BellamMode"><i class="sprite-product tw"></i></a></li>
-		{if $HOOK_EXTRA_LEFT}{$HOOK_EXTRA_LEFT}{/if}
+		{*if $HOOK_EXTRA_LEFT}{$HOOK_EXTRA_LEFT}{/if*}
 		<li><a href="javascript:print();"><i class="sprite-product print"></i></a></li>
 	</ul>
 </div><!-- END#social -->
 <div class="block_other_look">
 <ul>
-<li class="arrow"><a href=""><img src="{$img_dir}/look_arrow_left.png" /></a></li>
-<li class="look_other_expl">Les autres looks</li>
-<li class="arrow"><a href=""><img src="{$img_dir}/look_arrow_right.png" /></a></li>
+	{if $look->prevLook}
+	<li class="arrow"><a href="{$link->getPageLink('look.php')}?id_look={$look->prevLook[0].id_look}"><img src="{$img_dir}/look_arrow_left.png" /></a></li>
+	{/if}
+	<li class="look_other_expl">Les autres looks</li>
+	{if $look->nextLook}
+	<li class="arrow"><a href="{$link->getPageLink('look.php')}?id_look={$look->nextLook[0].id_look}"><img src="{$img_dir}/look_arrow_right.png" /></a></li>
+	{/if}
 </ul>
 </div>
 </div>
