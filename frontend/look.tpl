@@ -36,8 +36,8 @@
 	</div>
 	<ul id="usefull_link_block" class="clearfix">
 		<!-- usefull links-->
-		<li><a href="https://www.facebook.com/pages/Bellam-Mode/265280330176743"><i class="sprite-product fb"></i></a></li>
-		<li><a href="https://twitter.com/#!/BellamMode"><i class="sprite-product tw"></i></a></li>
+		<li><a target="_blank" href="https://www.facebook.com/pages/Bellam-Mode/265280330176743"><i class="sprite-product fb"></i></a></li>
+		<li><a target="_blank" href="https://twitter.com/#!/BellamMode"><i class="sprite-product tw"></i></a></li>
 		{*if $HOOK_EXTRA_LEFT}{$HOOK_EXTRA_LEFT}{/if*}
 		<li><a href="javascript:print();"><i class="sprite-product print"></i></a></li>
 	</ul>
