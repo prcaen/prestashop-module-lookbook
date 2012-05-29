@@ -148,7 +148,7 @@ class AdminLookbook extends AdminTab
 			{
 				if (isset($_POST[$this->table.'Box']))
 				{
-					$lookbook = new Lookbook();
+					$lookbook = new LookbookObject();
 					$result = true;
 					$result = $lookbook->deleteSelection(Tools::getValue($this->table.'Box'));
 					if ($result)

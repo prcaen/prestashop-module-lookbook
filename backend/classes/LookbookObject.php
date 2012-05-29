@@ -121,6 +121,25 @@ class LookbookObject extends ObjectModel
 		return $looks;
 	}
 
+	public static function cleanPositions($id_lookbook_parent)
+	{
+		$result = Db::getInstance()->ExecuteS('
+		SELECT `id_lookbook`
+		FROM `'._DB_PREFIX_.'lookbook`
+		WHERE `id_parent` = '.(int)($id_lookbook_parent).'
+		ORDER BY `position`');
+		$sizeof = sizeof($result);
+		for ($i = 0; $i < $sizeof; ++$i){
+				$sql = '
+				UPDATE `'._DB_PREFIX_.'lookbook`
+				SET `position` = '.(int)($i).'
+				WHERE `id_parent` = '.(int)($id_lookbook_parent).'
+				AND `id_lookbook` = '.(int)($result[$i]['id_lookbook']);
+				Db::getInstance()->Execute($sql);
+			}
+		return true;
+	}
+
 	public function getSubLookbooks($id_lang = NULL)
 	{
 		$lookbooks = array();
