@@ -9,11 +9,11 @@
 <img class="look_big_one" src="{$base_dir}modules/lookbook/img/slides/{$look->images[0]['image']}" />
 <div class="details clearfix">
 <h3>{$look->meta_title}</h3>
-<ul>
+<ul id="look_products">
 {foreach from=$look->products item=product}
-	<li>
+	<li class="clearfix">
 		<a href="{$link->getProductLink($product->id, $product->link_rewrite)}">
-			{$product->name}
+			<span>{$product->name}</span>
 			<span>{displayPrice price=$product->price}</span>
 		</a>
 	</li>
