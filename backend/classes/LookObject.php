@@ -66,7 +66,7 @@ class LookObject extends ObjectModel
 	{
 		parent::__construct($id_look, $id_lang);
 
-		$this->products = $this->getProducts($id_lang, $backoffice);
+		$this->products = $this->getProducts($id_lang);
 		if($id_look)
 		{
 			$this->images = $this->getImages();
@@ -93,29 +93,22 @@ class LookObject extends ObjectModel
 			AND li.`cover` = 1');
 	}
 
-	public function getProducts($id_lang = NULL, $backoffice = false)
+	public function getProducts($id_lang = NULL)
 	{
 		$products = array();
 
 		if ($id_lang == NULL)
 			$id_lang = Configuration::get('PS_LANG_DEFAULT');
 
-		if($backoffice)
-		{
-
-		}
-		else
-		{
-			$results = Db::getInstance()->getRow('
+		$results = Db::getInstance()->ExecuteS('
 			SELECT lp.`id_product`
 			FROM `'._DB_PREFIX_.'look_product` lp
 			WHERE lp.`id_look` = '.(int)($this->id));
-	
-			if(!empty($results))
-			{
-				foreach($results AS $result)
-					$products[] = new Product($result['id_product'], false, $id_lang);
-			}
+
+		if(!empty($results))
+		{
+			foreach($results AS $result)
+				$products[] = new Product($result['id_product'], false, $id_lang);
 		}
 
 		return $products;
