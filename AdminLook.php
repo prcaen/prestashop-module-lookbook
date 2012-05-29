@@ -202,8 +202,8 @@ class AdminLook extends AdminTab
 				echo '	<p><label>'. $this->l('Thumbs') .'</label>';
 				echo '	<input type="file" name="look_thumbsBox[]" /></p>';
 				echo '	<p><label>'. $this->l('Cover') .'</label>';
-				echo '	<input type="radio" name="cover" class="cover" value="0" '.($image['cover'] ? 'checked="checked"' : '').' /> <input type="file" name="look_coverBox[]" /></p>';
-				echo '	<p style="text-align: center" class="image_ctn"><img src="../modules/lookbook/img/thumbs/'. $image['image'] .'" height="100" /><img src="../modules/lookbook/img/slides/'. $image['image'] .'" height="100" />'. ($image['cover'] ? '<img src="../modules/lookbook/img/covers/'. $image['image'] .'" height="100" />' : '') .'</p>';
+				echo '	<input type="radio" name="cover" class="cover" value="'.$i.'" '.($image['cover'] ? 'checked="checked"' : '').' /> <input type="file" name="look_coverBox[]" /></p>';
+				echo '	<p style="text-align: center" class="image_ctn"><img src="../modules/lookbook/img/thumbs/'. $image['image'] .'" height="100" /><img src="../modules/lookbook/img/slides/'. $image['image'] .'" height="100" />'. ($image['image'] ? '<img src="../modules/lookbook/img/covers/'. $image['image'] .'" height="100" />' : '') .'</p>';
 				echo '	</fieldset>';
 			}
 		}
@@ -216,7 +216,7 @@ class AdminLook extends AdminTab
 			echo '	<p><label>'. $this->l('Thumbs') .'</label>';
 			echo '	<input type="file" name="look_thumbsBox[]" /></p>';
 			echo '	<p><label>'. $this->l('Cover') .'</label>';
-			echo '	<input type="radio" name="cover" class="cover" value="0" /> <input type="file" name="look_coverBox[]" /></p>';
+			echo '	<input type="radio" name="cover" class="cover" value="1" /> <input type="file" name="look_coverBox[]" /></p>';
 			echo '	</fieldset>';
 		}
 		echo '</fieldset>';
@@ -353,7 +353,7 @@ class AdminLook extends AdminTab
 					elseif (Tools::isSubmit('submitAddlookAndPreview'))
 					{
 						$look->setProducts(Tools::getValue('look_productBox'));
-						$look->setImages($_FILES);
+						$look->setImages($_FILES, $_POST['cover']);
 						$preview_url = $this->getLookLink($look, $this->getFieldValue($object, 'link_rewrite', $this->_defaultFormLanguage), (int)($cookie->id_lang));
 						if (!$look->active)
 						{
@@ -368,7 +368,7 @@ class AdminLook extends AdminTab
 					else
 					{
 						$look->setProducts(Tools::getValue('look_productBox'));
-						$look->setImages($_FILES);
+						$look->setImages($_FILES, $_POST['cover']);
 						Tools::redirectAdmin($currentIndex.'&id_lookbook='.$look->id_lookbook.'&conf=3&token='.Tools::getAdminTokenLite('AdminLookbookContent'));
 					}
 				}
@@ -388,7 +388,7 @@ class AdminLook extends AdminTab
 								$this->deleteImage($id_look, $delete);
 							}
 						}
-						$look->setImages($_FILES);
+						$look->setImages($_FILES, $_POST['cover']);
 						$preview_url = $this->getLookLink($look, $this->getFieldValue($object, 'link_rewrite', $this->_defaultFormLanguage), (int)($cookie->id_lang));
 						if (!$look->active)
 						{
@@ -410,7 +410,7 @@ class AdminLook extends AdminTab
 								$this->deleteImage($id_look, $delete);
 							}
 						}
-						$look->setImages($_FILES);
+						$look->setImages($_FILES, $_POST['cover']);
 						Tools::redirectAdmin($currentIndex.'&id_lookbook='.$look->id_lookbook.'&conf=4&token='.Tools::getAdminTokenLite('AdminLookbookContent'));
 					}
 				}

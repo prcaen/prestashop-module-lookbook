@@ -125,7 +125,7 @@ class LookObject extends ObjectModel
   		{
   			$imgName = $this->id . '_' . $i;
 				$ext = $this->_createSlide($files['look_imageBox']['tmp_name'][$i], $files['look_imageBox']['name'][$i], $imgName, true);
-				$images .= "('" . $this->id . "', '" . $imgName . $ext . "', '".($cover == $i ? 1 : 0)."')";
+				$images .= "('" . $this->id . "', '" . $imgName . $ext . "', '".($cover - 1 == $i ? 1 : 0)."')";
   				if($i + 1 < $nbImages)
 						$images .= ', ';
   		}
@@ -151,8 +151,9 @@ class LookObject extends ObjectModel
 		$nbThumbs = count($files['look_coverBox']['tmp_name']);
 		for($i = 0; $i <= $nbThumbs; $i++)
 		{
-			if(isset($files['look_coverBox']['tmp_name'][$i]) AND !empty($files['look_coverBox']['tmp_name'][$i]) AND $cover = $i)
+			if(isset($files['look_coverBox']['tmp_name'][$i]) AND !empty($files['look_coverBox']['tmp_name'][$i]))
   		{
+  			$imgName = $this->id . '_' . $i;
   			$this->_createCover($files['look_coverBox']['tmp_name'][$i], $files['look_coverBox']['name'][$i], $imgName, $ext, true);
   		}
 		}
