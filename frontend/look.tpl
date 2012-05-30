@@ -35,13 +35,6 @@
 		<a class="addthis_button_facebook_like" fb:like:layout="button_count" fb:like:send="false" fb:like:href="{$link->getProductLink($product->id)}" fb:like:width="100"></a>
 		<a class="addthis_button_tweet" tw:text="" tw:count="none" tw:url="{$link->getProductLink($product->id)}" tw:via="BellamMode" tw:lang="fr" style="width: 65px"></a>
 	</div>
-	<ul id="usefull_link_block" class="clearfix">
-		<!-- usefull links-->
-		<li><a target="_blank" href="https://www.facebook.com/pages/Bellam-Mode/265280330176743"><i class="sprite-product fb"></i></a></li>
-		<li><a target="_blank" href="https://twitter.com/#!/BellamMode"><i class="sprite-product tw"></i></a></li>
-		{*if $HOOK_EXTRA_LEFT}{$HOOK_EXTRA_LEFT}{/if*}
-		<li><a href="javascript:print();"><i class="sprite-product print"></i></a></li>
-	</ul>
 </div><!-- END#social -->
 <div class="block_other_look">
 <ul>
